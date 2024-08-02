@@ -2,6 +2,10 @@ package com.pesopes.ascendfruit;
 
 import net.fabricmc.api.ModInitializer;
 
+import net.minecraft.block.Block;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
+import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +15,7 @@ public class AscendFruit implements ModInitializer {
     // That way, it's clear which mod wrote info, warnings, and errors.
     public static final Logger LOGGER = LoggerFactory.getLogger("ascendfruit");
     public static final String MOD_ID = "ascendfruit";
+    public static final TagKey<Block> NOT_ASCENDABLE = TagKey.of(RegistryKeys.BLOCK, Identifier.of("ascendfruit", "not_ascendable"));
 
     @Override
     public void onInitialize() {
