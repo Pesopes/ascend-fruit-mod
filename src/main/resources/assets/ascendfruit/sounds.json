@@ -1,0 +1,8 @@
+{
+  "ascend_fruit_teleport": {
+    "subtitle": "sound.ascendfruit.ascend_fruit_teleport",
+    "sounds": [
+      "ascendfruit:ascend_fruit_teleport"
+    ]
+  }
+}

@@ -19,6 +19,8 @@ public class AscendFruit implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        CustomSounds.initialize();
         ModItems.initialize();
+
     }
 }
