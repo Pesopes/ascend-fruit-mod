@@ -2,6 +2,7 @@ package com.pesopes.ascendfruit;
 
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
@@ -21,6 +22,6 @@ public class AscendFruit implements ModInitializer {
     public void onInitialize() {
         CustomSounds.initialize();
         ModItems.initialize();
-
+        PayloadTypeRegistry.playS2C().register(CustomParticleUtil.SendParticlePayload.ID, CustomParticleUtil.SendParticlePayload.CODEC);
     }
 }
