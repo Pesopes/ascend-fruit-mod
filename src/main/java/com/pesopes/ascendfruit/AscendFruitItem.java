@@ -7,9 +7,7 @@ import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
 
-import net.minecraft.particle.ParticleUtil;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -20,7 +18,6 @@ import net.minecraft.world.event.GameEvent;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
-import java.util.logging.Logger;
 
 
 public class AscendFruitItem extends Item {
@@ -30,7 +27,6 @@ public class AscendFruitItem extends Item {
 
     private static final int maxCeilingDistance = 8;
     private static final int maxTerrainDistance = 200;
-    private int test = 10;
 
     // TODO: what if there's ocean above you (probably teleport but then what about lava)
     public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
@@ -39,16 +35,18 @@ public class AscendFruitItem extends Item {
         if (!world.isClient) {
             Vec3d userPos = user.getPos();
 
-
+            // Searches above and around the entity for the target position to teleport to
             Vec3d targetPos = findBestTarget(world, user);
             // If nothing found cancel the teleport
             if (targetPos == null) {
                 //TODO: add failed teleport sound
+                //TODO: mixin into ItemStack::decrementUnlessCreative so that the fruit isn't consumed when failing
                 return itemStack;
             }
             if (user.hasVehicle()) {
                 user.stopRiding();
             }
+            // "Borrowed" from the chorus fruit implementation
             if (user.teleport(targetPos.x, targetPos.y, targetPos.z, false)) {
                 world.emitGameEvent(GameEvent.TELEPORT, userPos, GameEvent.Emitter.of(user));
                 SoundCategory soundCategory;
@@ -60,10 +58,10 @@ public class AscendFruitItem extends Item {
                     soundEvent = CustomSounds.ASCEND_FRUIT_TELEPORT;
                     soundCategory = SoundCategory.PLAYERS;
                 }
-                //TODO: add particle effect that have a high upwards velocity
 
-//                spawnParticle((ServerWorld) world, BlockPos.ofFloored(userPos), Direction.UP, ParticleTypes.CRIT, new Vec3d(0.0, i, 0.0), 1);
                 // Find players in 32 block area (that's what the /particle commands uses normally)
+                // Send a packet to display particles for both the starting and ending positions
+                // FIXME: the particles don't have upwards velocity (wrong particle type or something else idk)
                 for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
                     ServerPlayNetworking.send(player, new CustomParticleUtil.SendParticlePayload(BlockPos.ofFloored(userPos), Direction.UP, new Vector3f(0.0F, 10.0F, 0.0F), 1));
                 }
@@ -116,6 +114,7 @@ public class AscendFruitItem extends Item {
         double targetZ = userPos.getZ();
 
         ArrayList<Vec3d> adjacentPositions = getAdjacentPositions(user);
+        // Goes through potential targets and gets the highest one
         for (Vec3d adjacentPosition : adjacentPositions) {
             BlockPos potentialTarget = findTarget(world, BlockPos.ofFloored(adjacentPosition));
             if (potentialTarget == null) {
