@@ -19,12 +19,12 @@ public class CustomParticleUtil {
 //        );
 //    }
 
-    public record SendParticlePayload(BlockPos pos, Direction direction, Vector3f velocity,
+    public record SendParticlePayload(Vector3f pos, Direction direction, Vector3f velocity,
                                       double offsetMultiplier) implements CustomPayload {
         public static final CustomPayload.Id<SendParticlePayload> ID = new CustomPayload.Id<>(PARTICLE_PAYLOAD_ID);
 
         public static final PacketCodec<RegistryByteBuf, SendParticlePayload> CODEC = PacketCodec.tuple(
-                BlockPos.PACKET_CODEC, SendParticlePayload::pos,
+                PacketCodecs.VECTOR3F, SendParticlePayload::pos,
                 Direction.PACKET_CODEC, SendParticlePayload::direction,
 //                ParticleEffect.PACKET_CODE /*<--- THIS DOES NOT EXIST*/, SendParticlePayload::effect,
                 PacketCodecs.VECTOR3F, SendParticlePayload::velocity,

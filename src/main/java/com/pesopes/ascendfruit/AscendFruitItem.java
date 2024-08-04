@@ -63,10 +63,10 @@ public class AscendFruitItem extends Item {
                 // Send a packet to display particles for both the starting and ending positions
                 // FIXME: the particles don't have upwards velocity (wrong particle type or something else idk)
                 for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
-                    ServerPlayNetworking.send(player, new CustomParticleUtil.SendParticlePayload(BlockPos.ofFloored(userPos), Direction.UP, new Vector3f(0.0F, 10.0F, 0.0F), 1));
+                    ServerPlayNetworking.send(player, new CustomParticleUtil.SendParticlePayload(userPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
                 }
                 for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
-                    ServerPlayNetworking.send(player, new CustomParticleUtil.SendParticlePayload(BlockPos.ofFloored(targetPos), Direction.UP, new Vector3f(0.0F, 10.0F, 0.0F), 1));
+                    ServerPlayNetworking.send(player, new CustomParticleUtil.SendParticlePayload(targetPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
                 }
 
                 world.playSound(null, user.getX(), user.getY(), user.getZ(), soundEvent, soundCategory);
