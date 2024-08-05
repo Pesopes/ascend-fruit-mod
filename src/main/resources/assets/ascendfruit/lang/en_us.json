@@ -1,3 +1,4 @@
 {
-  "item.ascendfruit.ascend_fruit": "Ascend Fruit"
+  "item.ascendfruit.ascend_fruit": "Ascend Fruit",
+  "sound.ascendfruit.ascend_fruit_teleport": "Entity ascends"
 }
