@@ -142,7 +142,7 @@ public class AscendFruitItem extends Item {
         ArrayList<Vec3d> adjacentPositions = getAdjacentPositions(user);
         // Goes through potential targets and gets the highest one
         for (Vec3d adjacentPosition : adjacentPositions) {
-            BlockPos potentialTarget = findTarget(world, BlockPos.ofFloored(adjacentPosition));
+            BlockPos potentialTarget = findTarget(world, BlockPos.ofFloored(adjacentPosition), user);
             if (potentialTarget == null) {
                 continue;
             }
@@ -165,10 +165,10 @@ public class AscendFruitItem extends Item {
     }
 
     // Combines findCeiling and findTop
-    private BlockPos findTarget(World world, BlockPos startPos) {
+    private BlockPos findTarget(World world, BlockPos startPos, LivingEntity user) {
         BlockPos ceilingPos = findCeiling(world, startPos);
         if (ceilingPos != null) {
-            return findTop(world, ceilingPos);
+            return findTop(world, ceilingPos, user);
         }
         return null;
     }
@@ -177,7 +177,7 @@ public class AscendFruitItem extends Item {
     private BlockPos findCeiling(World world, BlockPos startPos) {
         for (int y = 1; y < maxCeilingDistance; y++) {
             BlockPos pos = startPos.up(y);
-            if (!world.isAir(pos) && !world.getBlockState(pos).isIn(AscendFruit.NOT_ASCENDABLE)) {
+            if (world.getBlockState(pos).blocksMovement() && !world.getBlockState(pos).isIn(AscendFruit.NOT_ASCENDABLE)) {
                 return pos;
             }
         }
@@ -186,14 +186,14 @@ public class AscendFruitItem extends Item {
     }
 
     // Finds the first air block from some starting position (can go through small gaps
-    private BlockPos findTop(World world, BlockPos ceilingPos) {
+    private BlockPos findTop(World world, BlockPos ceilingPos, LivingEntity user) {
         for (int y = 0; y < maxTerrainDistance; y++) {
             BlockPos tpos = ceilingPos.up(y);
             // Trying to go through a not ascendable block is not possible
             if (world.getBlockState(tpos).isIn(AscendFruit.NOT_ASCENDABLE)) {
                 return null;
             }
-            if (world.isAir(tpos)) {
+            if (!world.getBlockState(tpos).blocksMovement() && !world.containsFluid(user.getBoundingBox())) {
                 // FIXME: a fox could actually fit here so check more thoroughly (maybe using the entity's bounding box)
                 if (world.isAir(tpos.up(1))) {
                     return tpos;
