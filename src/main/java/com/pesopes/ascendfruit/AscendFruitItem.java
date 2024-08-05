@@ -60,11 +60,12 @@ public class AscendFruitItem extends Item {
 
                 // Find players in 32 block area (that's what the /particle commands uses normally)
                 // Send a packet to display particles for both the starting and ending positions
+                //FIXME: when teleporting a long distance you can't see particles, even the top ones which should be visible always
                 for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
-                    ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(userPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
+                    ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(userPos.toVector3f(), Direction.UP, new Vector3f(1.0F, 4.0F, 1.0F), 1));
                 }
-                for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
-                    ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(targetPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
+                for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, targetPos, 32.0)) {
+                    ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(targetPos.toVector3f(), Direction.UP, new Vector3f(-1.0F, 4.0F, -1.0F), 1));
                 }
 
                 world.playSound(null, user.getX(), user.getY(), user.getZ(), soundEvent, soundCategory);
