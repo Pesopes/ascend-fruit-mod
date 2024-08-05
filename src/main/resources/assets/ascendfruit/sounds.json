@@ -4,5 +4,11 @@
     "sounds": [
       "ascendfruit:ascend_fruit_teleport"
     ]
+  },
+  "ascend_fruit_error": {
+    "subtitle": "sound.ascendfruit.ascend_fruit_error",
+    "sounds": [
+      "ascendfruit:ascend_fruit_error"
+    ]
   }
 }

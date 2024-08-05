@@ -77,12 +77,16 @@ public class AscendFruitItem extends Item {
                 FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
                 return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
             } else {
-                //TODO: add failed teleport sound
+                SoundCategory soundCategory;
+                if (user instanceof FoxEntity) {
+                    soundCategory = SoundCategory.NEUTRAL;
+                } else {
+                    soundCategory = SoundCategory.PLAYERS;
+                }
+                world.playSound(null, user.getX(), user.getY(), user.getZ(), CustomSounds.ASCEND_FRUIT_ERROR, soundCategory);
                 if (user instanceof PlayerEntity playerEntity) {
 
                     playerEntity.getItemCooldownManager().set(this, 10);
-//                    AscendFruit.LOGGER.info("IM SENDING DONTCONSUME PACKET");
-//                    ServerPlayNetworking.send((ServerPlayerEntity) playerEntity, new CustomPackets.SendDontConsumePayload(itemStack));
                     return stack;
                 }
             }

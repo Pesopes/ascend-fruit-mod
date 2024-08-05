@@ -11,6 +11,7 @@ public class CustomSounds {
 
 
     public static final SoundEvent ASCEND_FRUIT_TELEPORT = registerSound("ascend_fruit_teleport");
+    public static final SoundEvent ASCEND_FRUIT_ERROR = registerSound("ascend_fruit_error");
 
     // actual registration of all the custom SoundEvents
     private static SoundEvent registerSound(String id) {
