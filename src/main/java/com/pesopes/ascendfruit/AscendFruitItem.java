@@ -80,7 +80,7 @@ public class AscendFruitItem extends Item {
                 if (user instanceof PlayerEntity playerEntity) {
 
                     playerEntity.getItemCooldownManager().set(this, 10);
-                    AscendFruit.LOGGER.info("IM SENDING DONTCONSUME PACKET");
+//                    AscendFruit.LOGGER.info("IM SENDING DONTCONSUME PACKET");
 //                    ServerPlayNetworking.send((ServerPlayerEntity) playerEntity, new CustomPackets.SendDontConsumePayload(itemStack));
                     return stack;
                 }
