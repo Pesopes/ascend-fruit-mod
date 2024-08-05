@@ -2,6 +2,8 @@ package com.pesopes.ascendfruit;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -28,9 +30,10 @@ public class AscendFruitItem extends Item {
     private static final int maxCeilingDistance = 8;
     private static final int maxTerrainDistance = 200;
 
+
     // TODO: what if there's ocean above you (probably teleport but then what about lava)
+    @Override
     public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
-        ItemStack itemStack = super.finishUsing(stack, world, user);
 
         if (!world.isClient) {
             Vec3d userPos = user.getPos();
@@ -38,16 +41,12 @@ public class AscendFruitItem extends Item {
             // Searches above and around the entity for the target position to teleport to
             Vec3d targetPos = findBestTarget(world, user);
             // If nothing found cancel the teleport
-            if (targetPos == null) {
-                //TODO: add failed teleport sound
-                //TODO: mixin into ItemStack::decrementUnlessCreative so that the fruit isn't consumed when failing
-                return itemStack;
-            }
+
             if (user.hasVehicle()) {
                 user.stopRiding();
             }
             // "Borrowed" from the chorus fruit implementation
-            if (user.teleport(targetPos.x, targetPos.y, targetPos.z, false)) {
+            if (targetPos != null && user.teleport(targetPos.x, targetPos.y, targetPos.z, false)) {
                 world.emitGameEvent(GameEvent.TELEPORT, userPos, GameEvent.Emitter.of(user));
                 SoundCategory soundCategory;
                 SoundEvent soundEvent;
@@ -61,25 +60,47 @@ public class AscendFruitItem extends Item {
 
                 // Find players in 32 block area (that's what the /particle commands uses normally)
                 // Send a packet to display particles for both the starting and ending positions
-                // FIXME: the particles don't have upwards velocity (wrong particle type or something else idk)
                 for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
-                    ServerPlayNetworking.send(player, new CustomParticleUtil.SendParticlePayload(userPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
+                    ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(userPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
                 }
                 for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
-                    ServerPlayNetworking.send(player, new CustomParticleUtil.SendParticlePayload(targetPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
+                    ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(targetPos.toVector3f(), Direction.UP, new Vector3f(0.0F, 4.0F, 0.0F), 1));
                 }
 
                 world.playSound(null, user.getX(), user.getY(), user.getZ(), soundEvent, soundCategory);
                 user.onLanding();
+                if (user instanceof PlayerEntity playerEntity) {
+                    playerEntity.clearCurrentExplosion();
+                    playerEntity.getItemCooldownManager().set(this, 60);
+                }
+                FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
+                return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
+            } else {
+                //TODO: add failed teleport sound
+                if (user instanceof PlayerEntity playerEntity) {
+
+                    playerEntity.getItemCooldownManager().set(this, 10);
+                    AscendFruit.LOGGER.info("IM SENDING DONTCONSUME PACKET");
+//                    ServerPlayNetworking.send((ServerPlayerEntity) playerEntity, new CustomPackets.SendDontConsumePayload(itemStack));
+                    return stack;
+                }
             }
 
-            if (user instanceof PlayerEntity playerEntity) {
-                playerEntity.clearCurrentExplosion();
-                playerEntity.getItemCooldownManager().set(this, 60);
+
+        } else {
+
+            // Searches above and around the entity for the target position to teleport to
+            Vec3d targetPos = findBestTarget(world, user);
+            if (targetPos == null || !user.teleport(targetPos.x, targetPos.y, targetPos.z, false)) {
+                return stack;
+            } else {
+                FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
+                return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
             }
         }
-
-        return itemStack;
+        // This shouldn't technically ever be called
+        FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
+        return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
     }
 
     // Returns blocks adjacent to the entity factoring in its bounding box

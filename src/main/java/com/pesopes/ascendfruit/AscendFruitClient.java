@@ -10,9 +10,9 @@ import org.joml.Vector3f;
 public class AscendFruitClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        AscendFruit.LOGGER.info("Client init");
+        AscendFruit.LOGGER.debug("Ascend Fruit Client init");
 
-        ClientPlayNetworking.registerGlobalReceiver(CustomParticleUtil.SendParticlePayload.ID, (payload, context) -> {
+        ClientPlayNetworking.registerGlobalReceiver(CustomPackets.SendParticlePayload.ID, (payload, context) -> {
             context.client().execute(() -> {
                 ClientWorld world = context.client().world;
                 Random random = world.random;
@@ -30,5 +30,6 @@ public class AscendFruitClient implements ClientModInitializer {
                 }
             });
         });
+
     }
 }

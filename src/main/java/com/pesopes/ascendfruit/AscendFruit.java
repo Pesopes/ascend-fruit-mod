@@ -22,6 +22,6 @@ public class AscendFruit implements ModInitializer {
     public void onInitialize() {
         CustomSounds.initialize();
         ModItems.initialize();
-        PayloadTypeRegistry.playS2C().register(CustomParticleUtil.SendParticlePayload.ID, CustomParticleUtil.SendParticlePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(CustomPackets.SendParticlePayload.ID, CustomPackets.SendParticlePayload.CODEC);
     }
 }
