@@ -17,10 +17,10 @@ public class CustomPackets {
         public static final CustomPayload.Id<SendParticlePayload> ID = new CustomPayload.Id<>(PARTICLE_PAYLOAD_ID);
 
         public static final PacketCodec<RegistryByteBuf, SendParticlePayload> CODEC = PacketCodec.tuple(
-                PacketCodecs.VECTOR3F, SendParticlePayload::pos,
+                PacketCodecs.VECTOR_3F, SendParticlePayload::pos,
                 Direction.PACKET_CODEC, SendParticlePayload::direction,
 //                ParticleEffect.PACKET_CODE /*<--- THIS DOES NOT EXIST*/, SendParticlePayload::effect,
-                PacketCodecs.VECTOR3F, SendParticlePayload::velocity,
+                PacketCodecs.VECTOR_3F, SendParticlePayload::velocity,
                 PacketCodecs.DOUBLE, SendParticlePayload::offsetMultiplier,
                 SendParticlePayload::new
         );

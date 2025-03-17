@@ -3,6 +3,7 @@ package com.pesopes.ascendfruit;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ConsumableComponent;
 import net.minecraft.component.type.FoodComponent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.FoxEntity;
@@ -49,12 +50,10 @@ public class AscendFruitItem extends Item {
             if (targetPos != null && user.teleport(targetPos.x, targetPos.y, targetPos.z, false)) {
                 world.emitGameEvent(GameEvent.TELEPORT, userPos, GameEvent.Emitter.of(user));
                 SoundCategory soundCategory;
-                SoundEvent soundEvent;
+                SoundEvent soundEvent = CustomSounds.ASCEND_FRUIT_TELEPORT;
                 if (user instanceof FoxEntity) {
-                    soundEvent = CustomSounds.ASCEND_FRUIT_TELEPORT;
                     soundCategory = SoundCategory.NEUTRAL;
                 } else {
-                    soundEvent = CustomSounds.ASCEND_FRUIT_TELEPORT;
                     soundCategory = SoundCategory.PLAYERS;
                 }
 
@@ -72,10 +71,11 @@ public class AscendFruitItem extends Item {
                 user.onLanding();
                 if (user instanceof PlayerEntity playerEntity) {
                     playerEntity.clearCurrentExplosion();
-                    playerEntity.getItemCooldownManager().set(this, 60);
+                    playerEntity.getItemCooldownManager().set(stack, 60);
                 }
                 FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
-                return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
+                ConsumableComponent consumableComponent = (ConsumableComponent)stack.get(DataComponentTypes.CONSUMABLE);
+                return consumableComponent != null ? consumableComponent.finishConsumption(world, user, stack) : stack;
             } else {
                 SoundCategory soundCategory;
                 if (user instanceof FoxEntity) {
@@ -86,7 +86,7 @@ public class AscendFruitItem extends Item {
                 world.playSound(null, user.getX(), user.getY(), user.getZ(), CustomSounds.ASCEND_FRUIT_ERROR, soundCategory);
                 if (user instanceof PlayerEntity playerEntity) {
 
-                    playerEntity.getItemCooldownManager().set(this, 10);
+                    playerEntity.getItemCooldownManager().set(stack, 10);
                     return stack;
                 }
             }
@@ -100,12 +100,15 @@ public class AscendFruitItem extends Item {
                 return stack;
             } else {
                 FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
-                return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
+//                return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
+                ConsumableComponent consumableComponent = (ConsumableComponent)stack.get(DataComponentTypes.CONSUMABLE);
+                return consumableComponent != null ? consumableComponent.finishConsumption(world, user, stack) : stack;
             }
         }
         // This shouldn't technically ever be called
         FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
-        return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
+        ConsumableComponent consumableComponent = (ConsumableComponent)stack.get(DataComponentTypes.CONSUMABLE);
+        return consumableComponent != null ? consumableComponent.finishConsumption(world, user, stack) : stack;
     }
 
     // Returns blocks adjacent to the entity factoring in its bounding box
