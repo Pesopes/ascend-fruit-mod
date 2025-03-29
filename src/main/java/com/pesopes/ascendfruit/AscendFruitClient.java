@@ -3,6 +3,7 @@ package com.pesopes.ascendfruit;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
@@ -29,7 +30,7 @@ public class AscendFruitClient implements ClientModInitializer {
                     double y = (double) pos.y - 0.05;
                     double z = (double) pos.z + radius * MathHelper.sin((float) angle);
 
-                    world.addParticle(
+                    world.addParticleClient(
                             ParticleTypes.REVERSE_PORTAL,
                             x, y, z, (pos.x - x) * vel.x * random.nextDouble(), vel.y + random.nextDouble(), (pos.z - z) * vel.z * random.nextDouble());
                 }
