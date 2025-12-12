@@ -36,8 +36,8 @@ public class AscendFruitItem extends Item {
     @Override
     public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
 
-        if (!world.isClient) {
-            Vec3d userPos = user.getPos();
+        if (!world.isClient()) {
+            Vec3d userPos = user.getEntityPos();
 
             // Searches above and around the entity for the target position to teleport to
             Vec3d targetPos = findBestTarget(world, user);
@@ -138,7 +138,7 @@ public class AscendFruitItem extends Item {
 
     private Vec3d findBestTarget(World world, LivingEntity user) {
         BlockPos targetPos = null;
-        Vec3d userPos = user.getPos();
+        Vec3d userPos = user.getEntityPos();
         double targetX = userPos.getX();
         double targetZ = userPos.getZ();
 
