@@ -22,7 +22,8 @@ public class CustomPackets {
 //                ParticleEffect.PACKET_CODE /*<--- THIS DOES NOT EXIST*/, SendParticlePayload::effect,
                 PacketCodecs.VECTOR_3F, SendParticlePayload::velocity,
                 PacketCodecs.DOUBLE, SendParticlePayload::offsetMultiplier,
-                SendParticlePayload::new
+                (pos, direction, velocity, offsetMultiplier) -> new SendParticlePayload(new Vector3f(pos), direction, new Vector3f(velocity), offsetMultiplier)
+//                SendParticlePayload::new
         );
 
         @Override
