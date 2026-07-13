@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.pesopes.ascendfruit.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "PotionBrewingRuntimeMixin",
+    "BrewingStandMenuMixin",
+    "BrewingStandBlockEntityMixin"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

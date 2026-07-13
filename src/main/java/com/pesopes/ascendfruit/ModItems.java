@@ -1,7 +1,8 @@
 package com.pesopes.ascendfruit;
 
-import me.emafire003.dev.custombrewrecipes.CustomBrewRecipeRegister;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.fabricmc.fabric.api.registry.FabricPotionBrewingBuilder;
 import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
@@ -21,26 +22,13 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class ModItems {
-
-//    public static Item register(Item item, String name) {
-//        Identifier itemID = Identifier.of(AscendFruit.MOD_ID, name);
-//
-//        RegistryKey<Item> key = RegistryKey.of(RegistryKeys.ITEM, itemID);
-//
-////        Item.Settings settings = new Item.Settings().registryKey(key);
-//
-//        Item registeredItem = Registry.register(Registries.ITEM, key, item);
-//
-//        return registeredItem;
-//    }
-
-    public static Item register(String name, Function<Item.Properties, Item> itemFactory, Item.Properties settings) {
+public class ModItems{
+    public static <T extends Item> T register(String name, Function<Item.Properties, T> itemFactory, Item.Properties settings) {
         // Create the item key.
         ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(AscendFruit.MOD_ID, name));
 
         // Create the item instance.
-        Item item = itemFactory.apply(settings.setId(itemKey));
+        T item = itemFactory.apply(settings.setId(itemKey));
 
         // Register the item.
         Registry.register(BuiltInRegistries.ITEM, itemKey, item);
@@ -58,10 +46,24 @@ public class ModItems {
     );
 
     public static void initialize() {
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FOOD_AND_DRINKS).register((itemGroup) -> itemGroup.accept(ASCEND_FRUIT));
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FOOD_AND_DRINKS).register((itemGroup) -> itemGroup.accept(ASCEND_FRUIT));
 
 //        Registry.register(Registries.SOUND_EVENT, Identifier.of(AscendFruit.MOD_ID, "ascend_fruit_teleport"),
 //                SoundEvent.of(Identifier.of(AscendFruit.MOD_ID, "ascend_fruit_teleport")));
-        CustomBrewRecipeRegister.registerCustomRecipe(Items.CHORUS_FRUIT, Items.WIND_CHARGE, ASCEND_FRUIT);
+//        CustomBrewRecipeRegister.registerCustomRecipe(Items.CHORUS_FRUIT, Items.WIND_CHARGE, ASCEND_FRUIT);
+//        FabricPotionBrewingBuilder.BUILD.register(builder -> {
+//            // Cast the builder to access the underlying vanilla list directly, bypassing expectPotion() validation!
+//            if (builder instanceof net.minecraft.world.item.alchemy.PotionBrewing.Builder vanillaBuilder) {
+//                vanillaBuilder.containerMixes.add(new net.minecraft.world.item.alchemy.PotionBrewing.Mix<>(
+//                        net.minecraft.world.item.Items.CHORUS_FRUIT.builtInRegistryHolder(),
+//                        net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.WIND_CHARGE),
+//                        ASCEND_FRUIT.builtInRegistryHolder()
+//                ));
+//            }
+//        });
+//        FabricPotionBrewingBuilder.BUILD.register(builder -> {
+//            builder.addContainer(Items.CHORUS_FRUIT);
+//            builder.addContainerRecipe(Items.CHORUS_FRUIT, Items.WIND_CHARGE, ModItems.ASCEND_FRUIT);
+//        });
     }
 }

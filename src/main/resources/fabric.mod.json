@@ -3,7 +3,7 @@
   "id": "ascendfruit",
   "version": "${version}",
   "name": "Ascend Fruit",
-  "description": "A simple mod which adds a new type of chorus fruit which lets you ascend up terrain",
+  "description": "A simple mod that adds a new type of chorus fruit which lets you ascend up terrain",
   "authors": [
     "Pesopes"
   ],
@@ -12,6 +12,7 @@
   },
   "license": "CC0-1.0",
   "icon": "assets/ascendfruit/icon.png",
+  "accessWidener": "ascendfruit.classtweaker",
   "environment": "*",
   "entrypoints": {
     "main": [
@@ -21,11 +22,13 @@
       "com.pesopes.ascendfruit.AscendFruitClient"
     ]
   },
+  "mixins": [
+    "ascendfruit.mixins.json"
+  ],
   "depends": {
-    "fabricloader": ">=0.16.10",
-    "minecraft": "~1.21",
-    "java": ">=21",
-    "fabric-api": "*",
-    "custombrewrecipes": "1.3.2"
+    "fabricloader": ">=0.19.3",
+    "minecraft": "26.1",
+    "java": ">=25",
+    "fabric-api": "*"
   }
 }

@@ -17,7 +17,7 @@ public class AscendFruitClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(CustomPackets.SendParticlePayload.ID, (payload, context) -> {
             context.client().execute(() -> {
                 ClientLevel world = context.client().level;
-                RandomSource random = world.random;
+                RandomSource random = world.getRandom();
                 Vector3f vel = payload.velocity();
                 Vector3f pos = payload.pos();
                 final double radius = 0.8;
