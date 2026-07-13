@@ -2,29 +2,34 @@ package com.pesopes.ascendfruit;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ConsumableComponent;
-import net.minecraft.component.type.FoodComponent;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.FoxEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.fox.Fox;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.math.*;
-import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 
 
 public class AscendFruitItem extends Item {
-    public AscendFruitItem(Settings settings) {
+    public AscendFruitItem(Properties settings) {
         super(settings);
     }
 
@@ -34,59 +39,59 @@ public class AscendFruitItem extends Item {
 
     // TODO: what if there's ocean above you (probably teleport but then what about lava)
     @Override
-    public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
+    public ItemStack finishUsingItem(ItemStack stack, Level world, LivingEntity user) {
 
-        if (!world.isClient()) {
-            Vec3d userPos = user.getEntityPos();
+        if (!world.isClientSide()) {
+            Vec3 userPos = user.position();
 
             // Searches above and around the entity for the target position to teleport to
-            Vec3d targetPos = findBestTarget(world, user);
+            Vec3 targetPos = findBestTarget(world, user);
             // If nothing found cancel the teleport
 
-            if (user.hasVehicle()) {
+            if (user.isPassenger()) {
                 user.stopRiding();
             }
             // "Borrowed" from the chorus fruit implementation
-            if (targetPos != null && user.teleport(targetPos.x, targetPos.y, targetPos.z, false)) {
-                world.emitGameEvent(GameEvent.TELEPORT, userPos, GameEvent.Emitter.of(user));
-                SoundCategory soundCategory;
+            if (targetPos != null && user.randomTeleport(targetPos.x, targetPos.y, targetPos.z, false)) {
+                world.gameEvent(GameEvent.TELEPORT, userPos, GameEvent.Context.of(user));
+                SoundSource soundCategory;
                 SoundEvent soundEvent = CustomSounds.ASCEND_FRUIT_TELEPORT;
-                if (user instanceof FoxEntity) {
-                    soundCategory = SoundCategory.NEUTRAL;
+                if (user instanceof Fox) {
+                    soundCategory = SoundSource.NEUTRAL;
                 } else {
-                    soundCategory = SoundCategory.PLAYERS;
+                    soundCategory = SoundSource.PLAYERS;
                 }
 
                 // Find players in 32 block area (that's what the /particle commands uses normally)
                 // Send a packet to display particles for both the starting and ending positions
                 //FIXME: when teleporting a long distance you can't see particles, even the top ones which should be visible always
-                for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, userPos, 32.0)) {
+                for (ServerPlayer player : PlayerLookup.around((ServerLevel) world, userPos, 32.0)) {
                     ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(userPos.toVector3f(), Direction.UP, new Vector3f(1.0F, 4.0F, 1.0F), 1));
                 }
-                for (ServerPlayerEntity player : PlayerLookup.around((ServerWorld) world, targetPos, 32.0)) {
+                for (ServerPlayer player : PlayerLookup.around((ServerLevel) world, targetPos, 32.0)) {
                     ServerPlayNetworking.send(player, new CustomPackets.SendParticlePayload(targetPos.toVector3f(), Direction.UP, new Vector3f(-1.0F, 4.0F, -1.0F), 1));
                 }
 
                 world.playSound(null, user.getX(), user.getY(), user.getZ(), soundEvent, soundCategory);
-                user.onLanding();
-                if (user instanceof PlayerEntity playerEntity) {
-                    playerEntity.clearCurrentExplosion();
-                    playerEntity.getItemCooldownManager().set(stack, 60);
+                user.resetFallDistance();
+                if (user instanceof Player playerEntity) {
+                    playerEntity.resetCurrentImpulseContext();
+                    playerEntity.getCooldowns().addCooldown(stack, 60);
                 }
-                FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
-                ConsumableComponent consumableComponent = (ConsumableComponent)stack.get(DataComponentTypes.CONSUMABLE);
-                return consumableComponent != null ? consumableComponent.finishConsumption(world, user, stack) : stack;
+                FoodProperties foodComponent = stack.get(DataComponents.FOOD);
+                Consumable consumableComponent = (Consumable)stack.get(DataComponents.CONSUMABLE);
+                return consumableComponent != null ? consumableComponent.onConsume(world, user, stack) : stack;
             } else {
-                SoundCategory soundCategory;
-                if (user instanceof FoxEntity) {
-                    soundCategory = SoundCategory.NEUTRAL;
+                SoundSource soundCategory;
+                if (user instanceof Fox) {
+                    soundCategory = SoundSource.NEUTRAL;
                 } else {
-                    soundCategory = SoundCategory.PLAYERS;
+                    soundCategory = SoundSource.PLAYERS;
                 }
                 world.playSound(null, user.getX(), user.getY(), user.getZ(), CustomSounds.ASCEND_FRUIT_ERROR, soundCategory);
-                if (user instanceof PlayerEntity playerEntity) {
+                if (user instanceof Player playerEntity) {
 
-                    playerEntity.getItemCooldownManager().set(stack, 10);
+                    playerEntity.getCooldowns().addCooldown(stack, 10);
                     return stack;
                 }
             }
@@ -95,39 +100,39 @@ public class AscendFruitItem extends Item {
         } else {
 
             // Searches above and around the entity for the target position to teleport to
-            Vec3d targetPos = findBestTarget(world, user);
-            if (targetPos == null || !user.teleport(targetPos.x, targetPos.y, targetPos.z, false)) {
+            Vec3 targetPos = findBestTarget(world, user);
+            if (targetPos == null || !user.randomTeleport(targetPos.x, targetPos.y, targetPos.z, false)) {
                 return stack;
             } else {
-                FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
+                FoodProperties foodComponent = stack.get(DataComponents.FOOD);
 //                return foodComponent != null ? user.eatFood(world, stack, foodComponent) : stack;
-                ConsumableComponent consumableComponent = (ConsumableComponent)stack.get(DataComponentTypes.CONSUMABLE);
-                return consumableComponent != null ? consumableComponent.finishConsumption(world, user, stack) : stack;
+                Consumable consumableComponent = (Consumable)stack.get(DataComponents.CONSUMABLE);
+                return consumableComponent != null ? consumableComponent.onConsume(world, user, stack) : stack;
             }
         }
         // This shouldn't technically ever be called
-        FoodComponent foodComponent = stack.get(DataComponentTypes.FOOD);
-        ConsumableComponent consumableComponent = (ConsumableComponent)stack.get(DataComponentTypes.CONSUMABLE);
-        return consumableComponent != null ? consumableComponent.finishConsumption(world, user, stack) : stack;
+        FoodProperties foodComponent = stack.get(DataComponents.FOOD);
+        Consumable consumableComponent = (Consumable)stack.get(DataComponents.CONSUMABLE);
+        return consumableComponent != null ? consumableComponent.onConsume(world, user, stack) : stack;
     }
 
     // Returns blocks adjacent to the entity factoring in its bounding box
-    private ArrayList<Vec3d> getAdjacentPositions(LivingEntity user) {
-        Box boundingBox = user.getBoundingBox();
-        double closeX = MathHelper.clamp(roundCoord(user.getX()), boundingBox.minX, boundingBox.maxX - 0.001);
-        double closeZ = MathHelper.clamp(roundCoord(user.getZ()), boundingBox.minZ, boundingBox.maxZ - 0.001);
-        ArrayList<Vec3d> adjacentPositions = new ArrayList<>();
-        adjacentPositions.add(new Vec3d(user.getX(), user.getY(), user.getZ()));
-        adjacentPositions.add(new Vec3d(closeX, user.getY(), user.getZ()));
-        adjacentPositions.add(new Vec3d(user.getX(), user.getY(), closeZ));
-        adjacentPositions.add(new Vec3d(closeX, user.getY(), closeZ));
+    private ArrayList<Vec3> getAdjacentPositions(LivingEntity user) {
+        AABB boundingBox = user.getBoundingBox();
+        double closeX = Mth.clamp(roundCoord(user.getX()), boundingBox.minX, boundingBox.maxX - 0.001);
+        double closeZ = Mth.clamp(roundCoord(user.getZ()), boundingBox.minZ, boundingBox.maxZ - 0.001);
+        ArrayList<Vec3> adjacentPositions = new ArrayList<>();
+        adjacentPositions.add(new Vec3(user.getX(), user.getY(), user.getZ()));
+        adjacentPositions.add(new Vec3(closeX, user.getY(), user.getZ()));
+        adjacentPositions.add(new Vec3(user.getX(), user.getY(), closeZ));
+        adjacentPositions.add(new Vec3(closeX, user.getY(), closeZ));
 
         return adjacentPositions;
     }
 
     // Rounds either one higher or one lower but very close to the original coord
     private double roundCoord(double coord) {
-        int floored = MathHelper.floor(coord);
+        int floored = Mth.floor(coord);
         double fraction = coord - floored;
         if (fraction >= 0.5) {
             return floored + 1;
@@ -136,39 +141,39 @@ public class AscendFruitItem extends Item {
         }
     }
 
-    private Vec3d findBestTarget(World world, LivingEntity user) {
+    private Vec3 findBestTarget(Level world, LivingEntity user) {
         BlockPos targetPos = null;
-        Vec3d userPos = user.getEntityPos();
-        double targetX = userPos.getX();
-        double targetZ = userPos.getZ();
+        Vec3 userPos = user.position();
+        double targetX = userPos.x();
+        double targetZ = userPos.z();
 
-        ArrayList<Vec3d> adjacentPositions = getAdjacentPositions(user);
+        ArrayList<Vec3> adjacentPositions = getAdjacentPositions(user);
         // Goes through potential targets and gets the highest one
-        for (Vec3d adjacentPosition : adjacentPositions) {
-            BlockPos potentialTarget = findTarget(world, BlockPos.ofFloored(adjacentPosition), user);
+        for (Vec3 adjacentPosition : adjacentPositions) {
+            BlockPos potentialTarget = findTarget(world, BlockPos.containing(adjacentPosition), user);
             if (potentialTarget == null) {
                 continue;
             }
             if (targetPos == null) {
                 targetPos = potentialTarget;
-                targetX = adjacentPosition.getX();
-                targetZ = adjacentPosition.getZ();
+                targetX = adjacentPosition.x();
+                targetZ = adjacentPosition.z();
                 continue;
             }
             if (potentialTarget.getY() > targetPos.getY()) {
                 targetPos = potentialTarget;
-                targetX = adjacentPosition.getX();
-                targetZ = adjacentPosition.getZ();
+                targetX = adjacentPosition.x();
+                targetZ = adjacentPosition.z();
             }
         }
         if (targetPos == null) {
             return null;
         }
-        return new Vec3d(targetX, targetPos.getY(), targetZ);
+        return new Vec3(targetX, targetPos.getY(), targetZ);
     }
 
     // Combines findCeiling and findTop
-    private BlockPos findTarget(World world, BlockPos startPos, LivingEntity user) {
+    private BlockPos findTarget(Level world, BlockPos startPos, LivingEntity user) {
         BlockPos ceilingPos = findCeiling(world, startPos);
         if (ceilingPos != null) {
             return findTop(world, ceilingPos, user);
@@ -177,10 +182,10 @@ public class AscendFruitItem extends Item {
     }
 
     // Finds the first non-air block above player
-    private BlockPos findCeiling(World world, BlockPos startPos) {
+    private BlockPos findCeiling(Level world, BlockPos startPos) {
         for (int y = 1; y < maxCeilingDistance; y++) {
-            BlockPos pos = startPos.up(y);
-            if (world.getBlockState(pos).blocksMovement() && !world.getBlockState(pos).isIn(AscendFruit.NOT_ASCENDABLE)) {
+            BlockPos pos = startPos.above(y);
+            if (world.getBlockState(pos).blocksMotion() && !world.getBlockState(pos).is(AscendFruit.NOT_ASCENDABLE)) {
                 return pos;
             }
         }
@@ -189,16 +194,16 @@ public class AscendFruitItem extends Item {
     }
 
     // Finds the first air block from some starting position (can go through small gaps
-    private BlockPos findTop(World world, BlockPos ceilingPos, LivingEntity user) {
+    private BlockPos findTop(Level world, BlockPos ceilingPos, LivingEntity user) {
         for (int y = 0; y < maxTerrainDistance; y++) {
-            BlockPos tpos = ceilingPos.up(y);
+            BlockPos tpos = ceilingPos.above(y);
             // Trying to go through a not ascendable block is not possible
-            if (world.getBlockState(tpos).isIn(AscendFruit.NOT_ASCENDABLE)) {
+            if (world.getBlockState(tpos).is(AscendFruit.NOT_ASCENDABLE)) {
                 return null;
             }
-            if (!world.getBlockState(tpos).blocksMovement() && !world.containsFluid(user.getBoundingBox())) {
+            if (!world.getBlockState(tpos).blocksMotion() && !world.containsAnyLiquid(user.getBoundingBox())) {
                 // FIXME: a fox could actually fit here so check more thoroughly (maybe using the entity's bounding box)
-                if (world.isAir(tpos.up(1))) {
+                if (world.isEmptyBlock(tpos.above(1))) {
                     return tpos;
                 }
                 // Found air gap where player can't fit -> continue past it

@@ -2,20 +2,20 @@ package com.pesopes.ascendfruit;
 
 import me.emafire003.dev.custombrewrecipes.CustomBrewRecipeRegister;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.minecraft.component.type.ConsumableComponent;
-import net.minecraft.component.type.FoodComponent;
-import net.minecraft.item.Item;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
 
-import net.minecraft.item.ItemGroups;
-import net.minecraft.item.Items;
-import net.minecraft.item.consume.UseAction;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -35,30 +35,30 @@ public class ModItems {
 //        return registeredItem;
 //    }
 
-    public static Item register(String name, Function<Item.Settings, Item> itemFactory, Item.Settings settings) {
+    public static Item register(String name, Function<Item.Properties, Item> itemFactory, Item.Properties settings) {
         // Create the item key.
-        RegistryKey<Item> itemKey = RegistryKey.of(RegistryKeys.ITEM, Identifier.of(AscendFruit.MOD_ID, name));
+        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(AscendFruit.MOD_ID, name));
 
         // Create the item instance.
-        Item item = itemFactory.apply(settings.registryKey(itemKey));
+        Item item = itemFactory.apply(settings.setId(itemKey));
 
         // Register the item.
-        Registry.register(Registries.ITEM, itemKey, item);
+        Registry.register(BuiltInRegistries.ITEM, itemKey, item);
 
         return item;
     }
 
-    public static final FoodComponent ASCEND_FRUIT_FOOD_COMPONENT = (new FoodComponent.Builder()).nutrition(0).saturationModifier(0.0F).alwaysEdible().build();
-    public static final ConsumableComponent ASCEND_FRUIT_CONSUMABLE_COMPONENT = ConsumableComponent.builder().useAction(UseAction.EAT).sound(SoundEvents.ENTITY_GENERIC_EAT).consumeParticles(true).consumeSeconds(2.4F).build();
+    public static final FoodProperties ASCEND_FRUIT_FOOD_COMPONENT = (new FoodProperties.Builder()).nutrition(0).saturationModifier(0.0F).alwaysEdible().build();
+    public static final Consumable ASCEND_FRUIT_CONSUMABLE_COMPONENT = Consumable.builder().animation(ItemUseAnimation.EAT).sound(SoundEvents.GENERIC_EAT).hasConsumeParticles(true).consumeSeconds(2.4F).build();
 
     public static final Item ASCEND_FRUIT = register(
             "ascend_fruit",
             settings -> new AscendFruitItem(settings.food(ASCEND_FRUIT_FOOD_COMPONENT, ASCEND_FRUIT_CONSUMABLE_COMPONENT)),
-            new Item.Settings()
+            new Item.Properties()
     );
 
     public static void initialize() {
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FOOD_AND_DRINK).register((itemGroup) -> itemGroup.add(ASCEND_FRUIT));
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FOOD_AND_DRINKS).register((itemGroup) -> itemGroup.accept(ASCEND_FRUIT));
 
 //        Registry.register(Registries.SOUND_EVENT, Identifier.of(AscendFruit.MOD_ID, "ascend_fruit_teleport"),
 //                SoundEvent.of(Identifier.of(AscendFruit.MOD_ID, "ascend_fruit_teleport")));
